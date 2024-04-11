@@ -1,18 +1,26 @@
+// import Data from './src/data';
+// import Dates from './src/dates';
+import {
+  GAMES_URL,
+  LEAGUE_TO_FOLLOW,
+  PRIMARY_LEAGUE,
+} from './src/constants';
 import Data from './src/data';
 import Dates from './src/dates';
+import MessagingConnection from './src/messaging/connection';
+import MessagingListening from './src/messaging/listening';
 import Request from './src/request';
 
-// websocketClient.initialize();
-// const listening = new Listening(websocketClient);
-
-// listening.onNewMessage();
-// const process = new Process();
-// process.handleEvents();
-
 const start = async () => {
-  const newRequest = new Request(
-    'https://www.futbolred.com/parrilla-de-futbol',
-  );
+  // const newMessagingConnection = new MessagingConnection();
+  // newMessagingConnection.start();
+  // const client =
+  //   newMessagingConnection.getWebsocketClient();
+
+  // const Listener = new MessagingListening(client);
+  // Listener.onNewMessage();
+
+  const newRequest = new Request(GAMES_URL);
   const response = await newRequest.getResponseBody();
   const newData = new Data(response);
   newData.startDataProcessing();
@@ -20,9 +28,14 @@ const start = async () => {
 
   const dataFiltered = newData.getGamesByFilters({
     date: newDates.formatedCurrentDay(),
-    league: 'All',
+    league: LEAGUE_TO_FOLLOW.ALL,
   });
-  console.log(dataFiltered);
+  console.log(
+    newData.getStringFromDataObject(
+      dataFiltered,
+      PRIMARY_LEAGUE,
+    ),
+  );
 };
 
 start();

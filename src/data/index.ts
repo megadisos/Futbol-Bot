@@ -39,11 +39,11 @@ class Data {
           home: this.$(element)
             .find('span.escudo-icon-local')
             .text()
-            .replace(/[\n\r\s]+/g, ''),
+            .replace(/^\s+|\s+$/g, ''),
           visitor: this.$(element)
             .find('span.escudo-icon-visitante')
             .text()
-            .replace(/[\n\r\s]+/g, ''),
+            .replace(/^\s+|\s+$/g, ''),
           league: ligas.eq(index).text(),
           hour: hours.eq(index).text(),
           channel: channels.eq(index).text(),
@@ -89,6 +89,34 @@ class Data {
     }
 
     return filteredData;
+  };
+
+  public getStringFromDataObject = (
+    filteredObject,
+    league?,
+  ) => {
+    let str = '';
+    const dateKeys = Object.keys(filteredObject);
+
+    dateKeys.map((date) => {
+      str = `${str}\n 🤖 Partidos ${date}\n`;
+
+      filteredObject[date].map((game) => {
+        const highlightLeague =
+          // eslint-disable-next-line multiline-ternary
+          league && league === game.league
+            ? // eslint-disable-next-line multiline-ternary, indent
+              `*${game.league}*`
+            : game.league;
+        str = `${str}\n ⚽ ${game.home} vs ${game.visitor} por ${highlightLeague} a las ${game.hour} transmitido por ${game.channel}`;
+      });
+    });
+    // eslint-disable-next-line multiline-ternary
+    str = league
+      ? // eslint-disable-next-line multiline-ternary, indent
+        `${str}\n\n ℹ️ En negrita torneo a seguir,si es polla no olvidar colocar resultados.`
+      : str;
+    return str;
   };
   public getDataObject = () => {
     return this.dataObject;
