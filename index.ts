@@ -12,14 +12,6 @@ import MessagingListening from './src/messaging/listening';
 import Request from './src/request';
 
 const start = async () => {
-  // const newMessagingConnection = new MessagingConnection();
-  // newMessagingConnection.start();
-  // const client =
-  //   newMessagingConnection.getWebsocketClient();
-
-  // const Listener = new MessagingListening(client);
-  // Listener.onNewMessage();
-
   const newRequest = new Request(GAMES_URL);
   const response = await newRequest.getResponseBody();
   const newData = new Data(response);
@@ -36,6 +28,14 @@ const start = async () => {
       PRIMARY_LEAGUE,
     ),
   );
+
+  const newMessagingConnection = new MessagingConnection();
+  newMessagingConnection.start();
+  const client =
+    newMessagingConnection.getWebsocketClient();
+
+  const Listener = new MessagingListening(client);
+  Listener.onNewMessage();
 };
 
 start();
