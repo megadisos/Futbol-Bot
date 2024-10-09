@@ -25,6 +25,7 @@
     }
   },
   "dependencies": {
+    "@types/node": "^22.7.4",
     "axios": "^1.6.8",
     "cheerio": "^1.0.0-rc.12",
     "qrcode-terminal": "^0.12.0",
