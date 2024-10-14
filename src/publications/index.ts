@@ -1,19 +1,93 @@
+/* eslint-disable indent */
 import { readdir, readFile } from 'fs/promises';
+import fs from 'fs';
 import { extname, join } from 'path';
 
 interface fileData {
   name: string;
   content: Buffer;
+  fullName: string;
+  fullPath: string;
+  description: string;
+  isMultiple: boolean;
+}
+interface albumData {
+  name: string;
+  content: Buffer[];
+  fullNames: string[];
   fullPath: string;
   description: string;
   isMultiple: boolean;
 }
 class Publications {
   location: string;
+  destination: string;
   files: fileData[];
-  constructor(location) {
-    this.location = location;
+  constructor(src, destination) {
+    this.location = src;
+    this.destination = destination;
   }
+
+  public getNotMultiplesFiles = (files: fileData[]) => {
+    return files.filter((file) => !file.isMultiple);
+  };
+
+  public moveFile = (fileName: string) => {
+    fs.rename(
+      this.location + `\\${fileName}`,
+      this.destination + `\\${fileName}`,
+      (err) => {
+        if (err) {
+          console.error('Error al mover el archivo:', err);
+        } else {
+          console.log('Archivo movido con éxito');
+        }
+      },
+    );
+  };
+  public getAlbumArray = (files: fileData[]) => {
+    const multiplesFiles: fileData[] =
+      this.getMultiplesFiles(files);
+    let newAlbumArray: albumData[] = [];
+    multiplesFiles.forEach((file) => {
+      const baseName = file.name.replace(/\d+\$$/, '');
+      const albumIndex = newAlbumArray.findIndex(
+        (file) => file.name === baseName,
+      );
+
+      const existAlbum = albumIndex !== -1;
+
+      if (existAlbum) {
+        newAlbumArray[albumIndex] = {
+          ...newAlbumArray[albumIndex],
+          fullNames: [
+            ...newAlbumArray[albumIndex].fullNames,
+            file.fullName,
+          ],
+          content: [
+            ...newAlbumArray[albumIndex].content,
+            file.content,
+          ],
+        };
+      } else {
+        const newFileAlbum: albumData = {
+          name: baseName,
+          content: [file.content],
+          fullNames: [file.fullName],
+          description: file.description,
+          fullPath: file.fullPath,
+          isMultiple: file.isMultiple,
+        };
+        newAlbumArray = [...newAlbumArray, newFileAlbum];
+      }
+    });
+
+    return newAlbumArray;
+  };
+
+  private getMultiplesFiles = (files: fileData[]) => {
+    return files.filter((file) => file.isMultiple);
+  };
   public createFiles = async () => {
     try {
       // Leer los archivos y directorios
@@ -27,7 +101,8 @@ class Publications {
           .filter(
             (dirent) =>
               dirent.isFile() &&
-              this.isImageFile(dirent.name),
+              this.isImageFile(dirent.name) &&
+              this.isValidFile(dirent.name),
           ) // Filtrar solo los archivos
           .map(async (dirent) => {
             const filePath = join(
@@ -41,6 +116,7 @@ class Publications {
             return {
               name: name,
               content: fileContent,
+              fullName: dirent.name,
               fullPath: filePath,
               description: this.getDescription(dirent.name),
               isMultiple: dirent.name
@@ -68,7 +144,10 @@ class Publications {
     // eslint-disable-next-line multiline-ternary
     const hastagArray = nameArray[1]
       ? // eslint-disable-next-line multiline-ternary, indent
-        nameArray[1].split('-')
+        nameArray[1]
+          // eslint-disable-next-line indent
+          .split('-')
+          .map((item) => item.split('.')[0])
       : [];
 
     switch (type.toLowerCase()) {
@@ -133,11 +212,33 @@ class Publications {
 
   public getFiles = () => this.files;
   // Función auxiliar para verificar si el archivo es de tipo imagen
-  private isImageFile = (fileName) => {
+  private isImageFile = (fileName: string) => {
     const ext = extname(fileName).toLowerCase();
     return (
       ext === '.png' || ext === '.jpg' || ext === '.jpeg'
     );
+  };
+
+  private isValidFile = (filename: string) => {
+    const validFileNameStart = [
+      'hd-',
+      'vn-',
+      'mp-',
+      'pd-',
+      'st-',
+      'tm-',
+      'mg-',
+      'go-',
+      'cm-',
+    ];
+    if (
+      validFileNameStart.includes(
+        filename.toLowerCase().slice(0, 3),
+      )
+    ) {
+      return true;
+    }
+    return false;
   };
 
   public getHoddiesText = (
